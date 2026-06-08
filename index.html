@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>برنامج المصححين - الواجهة العصرية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f8fafc; /* Slate 50 */
+            overflow-x: hidden;
+            color: #0f172a;
+        }
+        
+        /* Smooth Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Modern Excel-like Grid Styles */
+        .excel-table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; min-width: 1750px; }
+        .excel-table th { 
+            padding: 12px 8px; font-size: 13px; font-weight: 700; text-align: center; 
+            border-bottom: 2px solid #e2e8f0; border-left: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        .excel-table td { border-bottom: 1px solid #e2e8f0; border-left: 1px solid #e2e8f0; padding: 0; position: relative; }
+        .excel-table th:last-child, .excel-table td:last-child { border-left: none; }
+        
+        /* Modernized Header Colors */
+        .th-indigo { background-color: #eef2ff; color: #4338ca; } 
+        .th-emerald { background-color: #ecfdf5; color: #047857; }  
+
+        .excel-input { 
+            width: 100%; height: 100%; min-height: 40px; padding: 4px 10px; border: none; 
+            background: transparent; outline: none; font-size: 14px; font-weight: 500; transition: all 0.2s;
+        }
+        .excel-input:focus { background-color: #ffffff; box-shadow: inset 0 0 0 2px #3b82f6; border-radius: 2px; }
+        
+        .excel-select { 
+            width: 100%; height: 100%; min-height: 40px; padding: 4px 20px 4px 8px; border: none; 
+            background-color: transparent; outline: none; font-size: 13px; font-weight: 500; transition: all 0.2s;
+            cursor: pointer;
+        }
+        .excel-select:focus { background-color: #ffffff; box-shadow: inset 0 0 0 2px #3b82f6; border-radius: 2px; }
+
+        /* Print Styles */
+        @media print {
+            body * { visibility: hidden; }
+            #printSection, #printSection * { visibility: visible; }
+            #printSection { position: absolute; left: 0; top: 0; width: 100%; background: white; }
+            @page { size: A4 landscape; margin: 1cm; }
+            .print-landscape { @page { size: landscape; } }
+            .print-portrait { @page { size: portrait; } }
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+        }
+        
+        /* Modal Backdrop Blur */
+        .modal-overlay { background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); }
+        
+        /* Utility for card hover */
+        .hover-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .hover-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- Modern Toast Notification -->
+    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 translate-y-[150%] transition-transform duration-300 ease-out z-[200] no-print">
+        <div class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl font-medium text-sm flex items-center gap-3 border border-slate-700">
+            <svg class="w-5 h-5 text-emerald-400" id="toastIconSuccess" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <svg class="w-5 h-5 text-red-400 hidden" id="toastIconError" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span id="toastMessage">تم الإجراء بنجاح!</span>
+        </div>
+    </div>
+
+    <!-- Hidden File Input for Restore -->
+    <input type="file" id="backupFileInput" accept=".json" class="hidden" onchange="restoreBackup(event)">
+
+    <!-- Main Application UI -->
+    <div class="flex-grow flex flex-col h-full no-print">
+        
+        <!-- Modern Top Navigation -->
+        <nav class="bg-white border-b border-slate-200 shrink-0 shadow-sm z-20">
+            <div class="max-w-[1800px] mx-auto px-4 lg:px-8 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 hidden sm:block">
+                        <svg class="h-10 w-10 text-rose-700" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-black text-slate-800 tracking-tight">برنامج المصححين - <span class="text-blue-600">مركز نزوى</span></h1>
+                        <p class="text-sm text-slate-500 font-medium mt-0.5">مادة الدراسات الاجتماعية | <span class="text-green-600">تم تفعيل الحفظ التلقائي</span></p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="relative group hidden md:block">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                        <input type="text" id="searchInput" oninput="filterTable()" placeholder="بحث سريع..." class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block w-64 pr-10 p-2 transition-all">
+                    </div>
+                    
+                    <div class="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full font-bold text-sm border border-blue-100">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        الإجمالي: <span id="totalCount" class="mr-1">0</span>
+                    </div>
+                    
+                    <div class="text-xs text-slate-400 bg-slate-100 px-3 py-2 rounded-lg font-medium hidden lg:block">
+                        <span id="currentDate"></span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Command Center (Action Cards) -->
+        <div class="max-w-[1800px] mx-auto px-4 lg:px-8 w-full shrink-0 my-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                
+                <!-- Card 1: Views & Filters -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover-card">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                        الفرز والمشاهدة
+                    </h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="resetFilters()" class="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold py-2 rounded-lg transition-colors">الكل (الأساسية)</button>
+                        <button onclick="filterBy('exempt')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold py-2 rounded-lg transition-colors">المعفيين</button>
+                        <button onclick="filterBy('excused')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold py-2 rounded-lg transition-colors">غياب بعذر</button>
+                        <button onclick="filterBy('unexcused')" class="bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold py-2 rounded-lg transition-colors">غياب بدون عذر</button>
+                    </div>
+                </div>
+
+                <!-- Card 2: Reports & Print -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover-card col-span-1 xl:col-span-2">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        التقارير المخصصة للطباعة
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <button onclick="generateRewardsSheet()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-bold py-2 rounded-lg transition-colors">كشوف المكافآت</button>
+                        <button onclick="generateHallsSheet()" class="bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 text-[11px] font-bold py-2 rounded-lg transition-colors">قاعات التصحيح</button>
+                        <button onclick="openAttendanceSetup()" class="bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-[11px] font-bold py-2 rounded-lg transition-colors">الحضور والانصراف</button>
+                        <button onclick="openReviewSheet()" class="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold py-2 rounded-lg transition-colors">مراجعة شاملة</button>
+                        
+                        <!-- New Direct Print Buttons -->
+                        <button onclick="generateStatusReport('exempt')" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-[11px] font-bold py-2 rounded-lg transition-colors">طباعة المعفيين</button>
+                        <button onclick="generateStatusReport('excused')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-bold py-2 rounded-lg transition-colors">طباعة الغياب (بعذر)</button>
+                        <button onclick="generateStatusReport('unexcused')" class="bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-[11px] font-bold py-2 rounded-lg transition-colors">طباعة الغياب (بدون عذر)</button>
+                        <button onclick="exportToCompany()" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-bold py-2 rounded-lg transition-colors">تصدير للشركة (إكسل)</button>
+                    </div>
+                </div>
+
+                <!-- Card 3: Tools & Export -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover-card flex flex-col justify-between">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                            أدوات، شهادات، ونسخ
+                        </h3>
+                        <button onclick="openAbsenceModal()" class="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded font-bold hover:bg-red-200 transition">تسجيل غياب</button>
+                    </div>
+                    <div class="flex gap-2 mb-2">
+                        <button onclick="openDocModal('certificate')" class="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-[11px] font-bold py-1.5 px-2 rounded-lg flex-1">إصدار شهادات</button>
+                        <button onclick="openDocModal('clearance')" class="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold py-1.5 px-2 rounded-lg flex-1">إخلاء طرف</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="exportBackup()" class="bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 text-[11px] font-bold py-1.5 px-2 rounded-lg flex-1 flex justify-center items-center gap-1" title="نسخ احتياطي لكل البيانات (JSON)">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            نسخ احتياطي
+                        </button>
+                        <button onclick="triggerRestore()" class="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[11px] font-bold py-1.5 px-2 rounded-lg flex-1 flex justify-center items-center gap-1" title="استعادة نسخة (JSON)">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                            استعادة بيانات
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Main Editable Grid Area -->
+        <div class="flex-grow flex flex-col bg-white shadow-sm border-t border-slate-200 min-h-0">
+            <!-- Data Entry Toolbar -->
+            <div class="bg-slate-50 border-b border-slate-200 px-4 py-2 flex items-center shrink-0 z-20">
+                <div class="flex items-center gap-2 w-full">
+                    <span class="text-sm font-bold text-slate-700 ml-3 flex items-center gap-1.5 border-l border-slate-300 pl-3">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        إدخال البيانات
+                    </span>
+                    <button onclick="addGridRow(1)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 px-4 rounded-lg transition-colors shadow-sm">
+                        + صف جديد
+                    </button>
+                    <button onclick="addGridRow(5)" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold py-1.5 px-4 rounded-lg transition-colors">
+                        + 5 صفوف
+                    </button>
+                    <button onclick="openImportModal()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-1.5 px-4 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm mr-1">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        لصق من إكسل
+                    </button>
+                    <button onclick="checkDuplicates()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 text-xs font-bold py-1.5 px-4 rounded-lg transition-colors mr-auto hidden md:block">
+                        تدقيق تكرار الأسماء
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Table Container -->
+            <div class="flex-grow overflow-auto custom-scrollbar relative">
+                <table class="excel-table" id="mainGridTable">
+                    <thead class="sticky top-0 z-10 shadow-sm backdrop-blur-md bg-white/90">
+                        <tr>
+                            <th class="th-indigo" style="width: 50px;">م</th>
+                            <th class="th-indigo" style="width: 250px;">الاسم الرباعي</th>
+                            <th class="th-indigo" style="width: 120px;">رقم الملف</th>
+                            <th class="th-indigo" style="width: 220px;">مقر العمل (المدرسة)</th>
+                            <th class="th-indigo" style="width: 90px;">الجنس</th>
+                            <th class="th-indigo" style="width: 180px;">اسم البنك</th>
+                            <th class="th-indigo" style="width: 180px;">رقم الحساب</th>
+                            <th class="th-emerald" style="width: 110px;">رقم القاعة</th>
+                            <th class="th-emerald" style="width: 130px;">طبيعة المهمة</th>
+                            <th class="th-emerald" style="width: 100px;">رقم السؤال</th>
+                            <th class="th-emerald" style="width: 120px;">المجموعة</th>
+                            <th class="th-emerald" style="width: 90px;">إعفاء؟</th>
+                            <th class="th-emerald" style="width: 160px;">سبب الإعفاء</th>
+                            <th class="bg-slate-100 text-slate-500" style="width: 60px;">إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gridTableBody">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- تذييل حقوق المصمم -->
+        <div class="bg-white border-t border-slate-200 py-2.5 px-4 text-center text-[13px] font-medium shrink-0 text-slate-500 z-20 leading-relaxed">
+            فكرة وتصميم: <span class="font-bold text-blue-700">عبدالله بن خلف الرواحي</span> <span class="mx-1 text-slate-300">|</span> معلم أول جغرافيا
+            <span class="hidden sm:inline mx-2 text-slate-300">||</span><br class="sm:hidden">
+            بالتعاون مع الأستاذ: <span class="font-bold text-blue-700">خالد بن منصور الرواحي</span> <span class="mx-1 text-slate-300">|</span> مشرف الجغرافيا
+        </div>
+    </div>
+
+    <!-- Modals (Hidden by default) -->
+
+    <!-- Import Text Modal -->
+    <div id="importModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col transform scale-95 transition-transform duration-300 overflow-hidden" id="importModalContent">
+            <div class="bg-slate-800 text-white px-6 py-4 font-bold flex justify-between items-center">
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    استيراد ولصق البيانات
+                </span>
+                <button onclick="closeModal('importModal')" class="text-slate-400 hover:text-white transition-colors">&times;</button>
+            </div>
+            <div class="p-6">
+                <div class="bg-blue-50 border-r-4 border-blue-500 p-4 rounded text-sm text-blue-800 mb-4">
+                    <p class="font-bold mb-1">تعليمات الاستيراد السريع:</p>
+                    <p>قم بنسخ البيانات من ملف Excel الخاص بك والصقها هنا. تأكد من أن ترتيب الأعمدة يطابق الجدول (الاسم، الملف، المدرسة، الجنس، البنك، الحساب، القاعة، المهمة، السؤال، المجموعة، إعفاء؟، سبب الإعفاء).</p>
+                </div>
+                <textarea id="importArea" rows="8" class="w-full border border-slate-300 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all custom-scrollbar" placeholder="اضغط هنا ثم (Ctrl+V) للصق..."></textarea>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button onclick="closeModal('importModal')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-6 py-2.5 rounded-xl font-bold transition-colors">إلغاء الأمر</button>
+                    <button onclick="processImport()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-xl font-bold transition-colors shadow-md shadow-blue-500/30">استيراد وحفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Certificate / Clearance Modal -->
+    <div id="docModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col transform scale-95 transition-transform duration-300 overflow-hidden" id="docModalContent">
+            <div class="bg-slate-800 text-white px-6 py-4 font-bold flex justify-between items-center">
+                <span id="docModalTitle">إصدار مستند</span>
+                <button onclick="closeModal('docModal')" class="text-slate-400 hover:text-white transition-colors">&times;</button>
+            </div>
+            <div class="p-6">
+                <label class="block text-sm font-bold text-slate-700 mb-2">اختر اسم المصحح (أو الجميع):</label>
+                <select id="docMarkerSelect" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6 bg-slate-50"></select>
+                <input type="hidden" id="docTypeInput">
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeModal('docModal')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-6 py-2.5 rounded-xl font-bold transition-colors">إلغاء</button>
+                    <button onclick="printDocument()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        معاينة وطباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Absence Entry Modal -->
+    <div id="absenceModal" class="fixed inset-0 modal-overlay z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col transform scale-95 transition-transform duration-300 overflow-hidden" id="absenceModalContent">
+            <div class="bg-red-600 text-white px-6 py-4 font-bold flex justify-between items-center">
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    تسجيل حالة غياب
+                </span>
+                <button onclick="closeModal('absenceModal')" class="text-red-200 hover:text-white transition-colors">&times;</button>
+            </div>
+            <form onsubmit="saveAbsence(event)" class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">اسم المصحح:</label>
+                    <select id="abs_markerId" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-slate-50"></select>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">تاريخ الغياب:</label>
+                        <input type="date" id="abs_date" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-slate-50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">نوع العذر:</label>
+                        <select id="abs_type" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-slate-50">
+                            <option value="بعذر">الغياب بعذر</option>
+                            <option value="بغير عذر">بدون عذر</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('absenceModal')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-6 py-2.5 rounded-xl font-bold transition-colors">إلغاء</button>
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-8 py-2.5 rounded-xl font-bold transition-colors shadow-md shadow-red-500/30">حفظ السجل</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Attendance Setup Modal -->
+    <div id="attendanceSetupModal" class="fixed inset-0 modal-overlay z-[90] flex items-center justify-center hidden opacity-0 transition-opacity duration-300 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col transform scale-95 transition-transform duration-300 overflow-hidden" id="attendanceSetupModalContent">
+            <div class="bg-sky-600 text-white px-6 py-4 font-bold flex justify-between items-center">
+                <span>إعداد كشف الحضور والانصراف</span>
+                <button onclick="closeModal('attendanceSetupModal')" class="text-sky-200 hover:text-white transition-colors">&times;</button>
+            </div>
+            <form onsubmit="generateAttendanceSheet(event)" class="p-6">
+                <div class="bg-sky-50 text-sky-800 text-sm p-3 rounded-lg mb-4 border border-sky-100">
+                    سيتم إنشاء أعمدة الكشف تلقائياً بناءً على التواريخ المحددة.
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">من تاريخ:</label>
+                        <input type="date" id="sheet_startDate" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 bg-slate-50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">إلى تاريخ:</label>
+                        <input type="date" id="sheet_endDate" required class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 bg-slate-50">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('attendanceSetupModal')" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-6 py-2.5 rounded-xl font-bold transition-colors">إلغاء</button>
+                    <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white px-6 py-2.5 rounded-xl font-bold transition-colors shadow-md shadow-sky-500/30">توليد الكشف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= PRINT SECTIONS ================= -->
+    <div id="printSection" class="bg-white min-h-screen w-full hidden z-[500]">
+        <!-- Content injected here for printing -->
+    </div>
+
+    <!-- Floating Action for Print Preview Mode -->
+    <div id="printActions" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[600] hidden no-print bg-slate-800 p-2 rounded-full shadow-2xl border border-slate-600 flex gap-2">
+        <button onclick="window.print()" class="bg-blue-600 text-white px-6 py-2 font-bold rounded-full text-sm hover:bg-blue-700 transition flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            طباعة الكشف
+        </button>
+        <button onclick="closePrintView()" class="bg-slate-600 text-white px-6 py-2 font-bold rounded-full text-sm hover:bg-slate-500 transition">إغلاق المعاينة</button>
+    </div>
+
+    <script>
+        // Data Structure & Default Data
+        let defaultMarkers = [
+            { id: '1', name: 'أحمد بن سعيد السيابي', fileNumber: 'F-1234', school: 'مدرسة نزوى', gender: 'ذكر', bankName: 'بنك مسقط', accountNumber: '03100000000000', hallNumber: 'قاعة 1', task: 'مصحح', questionNumber: 'س1', group: 'الأولى', excused: '', unexcused: '', exempt: 'لا', exemptionReason: '' },
+            { id: '2', name: 'فاطمة بنت سالم الحوسنية', fileNumber: 'F-5678', school: 'مدرسة أم الفضل', gender: 'أنثى', bankName: 'بنك نزوى', accountNumber: '04100000000000', hallNumber: 'قاعة 3', task: 'مشرف', questionNumber: '-', group: 'الثالثة', excused: '2026-06-02', unexcused: '', exempt: 'نعم', exemptionReason: 'إجازة مرضية معتمدة' }
+        ];
+        
+        let markers = [];
+
+        // Format Date
+        const today = new Date();
+        const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('currentDate').innerText = today.toLocaleDateString('ar-OM', dateOptions);
+        document.getElementById('abs_date').value = today.toISOString().split('T')[0];
+        document.getElementById('sheet_startDate').value = today.toISOString().split('T')[0];
+        document.getElementById('sheet_endDate').value = today.toISOString().split('T')[0];
+
+        // Initialization & Auto Save System
+        window.onload = function() { 
+            loadFromLocal();
+            renderGrid(); 
+        }
+
+        function saveToLocal() {
+            localStorage.setItem('musahih_data', JSON.stringify(markers));
+        }
+
+        function loadFromLocal() {
+            const savedData = localStorage.getItem('musahih_data');
+            if(savedData) {
+                try {
+                    markers = JSON.parse(savedData);
+                } catch(e) {
+                    markers = [...defaultMarkers];
+                }
+            } else {
+                markers = [...defaultMarkers];
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            const tm = document.getElementById('toastMessage');
+            tm.innerText = msg;
+            
+            document.getElementById('toastIconSuccess').classList.toggle('hidden', isError);
+            document.getElementById('toastIconError').classList.toggle('hidden', !isError);
+            
+            t.classList.remove('translate-y-[150%]');
+            setTimeout(() => t.classList.add('translate-y-[150%]'), 3500);
+        }
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            const content = document.getElementById(id + 'Content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                if(content) {
+                    content.classList.remove('scale-95');
+                    content.classList.add('scale-100');
+                }
+            }, 10);
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            const content = document.getElementById(id + 'Content');
+            modal.classList.add('opacity-0');
+            if(content) {
+                content.classList.remove('scale-100');
+                content.classList.add('scale-95');
+            }
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // ================= GRID MANAGEMENT =================
+        function renderGrid(dataToRender = markers) {
+            const tbody = document.getElementById('gridTableBody');
+            tbody.innerHTML = '';
+            
+            if(dataToRender.length === 0) { addGridRow(1, tbody); } 
+            else { dataToRender.forEach((m, idx) => tbody.appendChild(createGridRow(m, idx + 1))); }
+            
+            updateTotalCount(dataToRender.length);
+        }
+
+        function updateTotalCount(count) {
+            document.getElementById('totalCount').innerText = count;
+        }
+
+        function getEmptyMarkerObj() {
+            return { id: crypto.randomUUID(), name: '', fileNumber: '', school: '', gender: 'ذكر', bankName: '', accountNumber: '', hallNumber: '', task: 'مصحح', questionNumber: '', group: '', excused: '', unexcused: '', exempt: 'لا', exemptionReason: '' };
+        }
+
+        function createGridRow(m, indexNum) {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-slate-50 transition-colors group';
+            tr.dataset.id = m.id;
+            
+            const makeSelect = (options, selected, field) => {
+                let html = `<select class="excel-select text-center" onchange="updateMarkerData(this, '${field}')"><option value=""></option>`;
+                options.forEach(opt => html += `<option value="${opt}" ${selected === opt ? 'selected' : ''}>${opt}</option>`);
+                html += `</select>`;
+                return html;
+            };
+
+            const banks = ['بنك مسقط', 'بنك نزوى', 'البنك الوطني', 'بنك ظفار', 'صحار الدولي', 'بنك عمان العربي', 'البنك الأهلي', 'ميثاق', 'مزن', 'اليسر'];
+            const halls = ['قاعة 1', 'قاعة 2', 'قاعة 3', 'قاعة 4', 'قاعة 5', 'قاعة 6'];
+            const groups = ['الأولى', 'الثانية', 'الثالثة', 'الرابعة', 'الخامسة'];
+            const tasks = ['مصحح', 'مشرف', 'مراجع', 'رئيس قاعة'];
+
+            tr.innerHTML = `
+                <td class="bg-slate-50 text-center text-xs font-bold text-slate-400 select-none">${indexNum}</td>
+                <td><input type="text" value="${m.name || ''}" class="excel-input font-bold text-blue-900 placeholder-slate-300" placeholder="أدخل الاسم..." onblur="updateMarkerData(this, 'name')"></td>
+                <td><input type="text" value="${m.fileNumber || ''}" class="excel-input text-center" onblur="updateMarkerData(this, 'fileNumber')"></td>
+                <td><input type="text" value="${m.school || ''}" class="excel-input" onblur="updateMarkerData(this, 'school')"></td>
+                <td>${makeSelect(['ذكر', 'أنثى'], m.gender, 'gender')}</td>
+                <td>${makeSelect(banks, m.bankName, 'bankName')}</td>
+                <td><input type="text" value="${m.accountNumber || ''}" dir="ltr" class="excel-input text-left font-mono text-xs tracking-wider" onblur="updateMarkerData(this, 'accountNumber')"></td>
+                <td class="bg-emerald-50/30">${makeSelect(halls, m.hallNumber, 'hallNumber')}</td>
+                <td class="bg-emerald-50/30">${makeSelect(tasks, m.task, 'task')}</td>
+                <td class="bg-emerald-50/30"><input type="text" value="${m.questionNumber || ''}" class="excel-input text-center" onblur="updateMarkerData(this, 'questionNumber')"></td>
+                <td class="bg-emerald-50/30">${makeSelect(groups, m.group, 'group')}</td>
+                <td class="bg-rose-50/30">${makeSelect(['لا', 'نعم'], m.exempt || 'لا', 'exempt')}</td>
+                <td class="bg-rose-50/30"><input type="text" value="${m.exemptionReason || ''}" class="excel-input" placeholder="سبب الإعفاء..." onblur="updateMarkerData(this, 'exemptionReason')"></td>
+                <td class="bg-slate-50 text-center">
+                    <button onclick="deleteRow(this)" class="text-slate-300 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 focus:outline-none opacity-0 group-hover:opacity-100" title="حذف الصف">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </td>
+            `;
+            return tr;
+        }
+
+        function addGridRow(count = 1, tbody = document.getElementById('gridTableBody')) {
+            let currentCount = tbody.children.length;
+            for(let i=0; i<count; i++) {
+                const newObj = getEmptyMarkerObj();
+                markers.push(newObj);
+                tbody.appendChild(createGridRow(newObj, currentCount + i + 1));
+            }
+            updateTotalCount(markers.length);
+            saveToLocal(); // Auto-save
+            if(count === 1) {
+                const container = tbody.closest('.overflow-auto');
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function deleteRow(btn) {
+            const tr = btn.closest('tr');
+            const id = tr.dataset.id;
+            markers = markers.filter(m => m.id !== id);
+            tr.remove();
+            
+            const rows = document.getElementById('gridTableBody').children;
+            for(let i=0; i<rows.length; i++) { rows[i].children[0].innerText = i + 1; }
+            updateTotalCount(markers.length);
+            saveToLocal(); // Auto-save
+        }
+
+        function updateMarkerData(element, field) {
+            const tr = element.closest('tr');
+            const id = tr.dataset.id;
+            const marker = markers.find(m => m.id === id);
+            if(marker) { 
+                marker[field] = element.value; 
+                saveToLocal(); // Auto-save on every cell edit
+            }
+        }
+
+        // ================= FEATURES & FILTERING =================
+        function filterTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = markers.filter(m => 
+                (m.name && m.name.toLowerCase().includes(query)) || 
+                (m.school && m.school.toLowerCase().includes(query)) ||
+                (m.fileNumber && m.fileNumber.includes(query)) ||
+                (m.bankName && m.bankName.includes(query))
+            );
+            renderGrid(filtered);
+        }
+
+        function filterBy(type) {
+            let filtered = [];
+            let msg = '';
+            if(type === 'excused') { filtered = markers.filter(m => m.excused && m.excused.length > 0); msg = 'الغياب بعذر'; }
+            else if(type === 'unexcused') { filtered = markers.filter(m => m.unexcused && m.unexcused.length > 0); msg = 'الغياب بدون عذر'; }
+            else if(type === 'exempt') { filtered = markers.filter(m => m.exempt === 'نعم'); msg = 'المعفيين'; }
+            
+            renderGrid(filtered);
+            showToast(`تم فرز وعرض كشوف (${msg}) - ${filtered.length} سجل.`);
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            renderGrid(markers);
+            showToast('تم إرجاع العرض للبيانات الأساسية');
+        }
+
+        function checkDuplicates() {
+            resetFilters(); 
+            const rows = document.getElementById('gridTableBody').querySelectorAll('tr');
+            let nameCounts = {};
+            let hasDupes = false;
+
+            markers.forEach(m => { if(m.name.trim()) nameCounts[m.name] = (nameCounts[m.name] || 0) + 1; });
+
+            rows.forEach(tr => {
+                const input = tr.querySelector('td:nth-child(2) input');
+                if(input && nameCounts[input.value] > 1) {
+                    input.classList.add('bg-red-50', 'text-red-700');
+                    hasDupes = true;
+                } else if(input) {
+                    input.classList.remove('bg-red-50', 'text-red-700');
+                }
+            });
+
+            if(hasDupes) showToast('تم العثور على أسماء مكررة، تم تظليلها باللون الأحمر!', true);
+            else showToast('عملية التدقيق ناجحة، لا توجد أسماء مكررة.');
+        }
+
+        // ================= IMPORT / EXPORT / BACKUP =================
+        function openImportModal() {
+            document.getElementById('importArea').value = '';
+            openModal('importModal');
+        }
+
+        function processImport() {
+            const data = document.getElementById('importArea').value;
+            if(!data.trim()) { showToast('الرجاء لصق البيانات أولاً.', true); return; }
+            const lines = data.split('\n');
+            let count = 0;
+            lines.forEach(line => {
+                const cols = line.split('\t').map(c => c ? c.trim() : '');
+                if(cols.length > 1 && cols[1]) {
+                    markers.push({
+                        id: crypto.randomUUID(), name: cols[1], fileNumber: cols[2] || '', school: cols[3] || '',
+                        gender: cols[4] || 'ذكر', bankName: cols[5] || '', accountNumber: cols[6] || '',
+                        hallNumber: cols[7] || '', task: cols[8] || 'مصحح', questionNumber: cols[9] || '', group: cols[10] || '',
+                        exempt: cols[11] || 'لا', exemptionReason: cols[12] || '',
+                        excused: '', unexcused: ''
+                    });
+                    count++;
+                }
+            });
+            renderGrid();
+            saveToLocal(); // Auto-save
+            closeModal('importModal');
+            showToast(`تم استيراد ${count} سجل بنجاح.`);
+        }
+
+        // JSON Backup / Restore
+        function exportBackup() {
+            if(markers.length === 0) return showToast('لا توجد بيانات لتصديرها', true);
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(markers));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", `نسخة_احتياطية_المصححين_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchorElem.click();
+            showToast('تم تحميل النسخة الاحتياطية بنجاح');
+        }
+
+        function triggerRestore() {
+            document.getElementById('backupFileInput').click();
+        }
+
+        function restoreBackup(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsedData = JSON.parse(e.target.result);
+                    if(Array.isArray(parsedData)) {
+                        markers = parsedData;
+                        saveToLocal();
+                        renderGrid();
+                        showToast('تمت استعادة النسخة الاحتياطية بنجاح!');
+                    } else {
+                        throw new Error("Invalid format");
+                    }
+                } catch(err) {
+                    showToast('فشل الاستعادة: ملف غير صالح', true);
+                }
+                // Reset file input so the same file can be chosen again if needed
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function downloadCSV(csvContent, fileName) {
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToExcel() {
+            if(markers.length === 0) return;
+            let csv = 'الاسم,رقم الملف,المدرسة,البنك,رقم الحساب,القاعة,المهمة,الإعفاء,السبب\n';
+            markers.forEach(m => { csv += `"${m.name}","${m.fileNumber}","${m.school}","${m.bankName}","${m.accountNumber}","${m.hallNumber}","${m.task}","${m.exempt}","${m.exemptionReason}"\n`; });
+            downloadCSV(csv, 'كشوف_المكافآت.csv');
+            showToast('تم تنزيل ملف كشوف المكافآت');
+        }
+
+        function exportToCompany() {
+            if(markers.length === 0) return;
+            let csv = 'الاسم,رقم الملف,المدرسة,الجنس,القاعة,المجموعة,رقم السؤال\n';
+            markers.forEach(m => { csv += `"${m.name}","${m.fileNumber}","${m.school}","${m.gender}","${m.hallNumber}","${m.group}","${m.questionNumber}"\n`; });
+            downloadCSV(csv, 'بيانات_الشركة.csv');
+            showToast('تم تنزيل بيانات الشركة المصححة');
+        }
+
+        // ================= ABSENCE SYSTEM =================
+        function openAbsenceModal() {
+            const select = document.getElementById('abs_markerId');
+            select.innerHTML = '';
+            markers.forEach(m => { if(m.name) select.innerHTML += `<option value="${m.id}">${m.name} (${m.school})</option>`; });
+            openModal('absenceModal');
+        }
+
+        function saveAbsence(e) {
+            e.preventDefault();
+            const id = document.getElementById('abs_markerId').value;
+            const date = document.getElementById('abs_date').value;
+            const type = document.getElementById('abs_type').value;
+            const m = markers.find(x => x.id === id);
+            
+            if(m && date) {
+                if(type === 'بعذر') m.excused = m.excused ? m.excused + ',' + date : date;
+                else m.unexcused = m.unexcused ? m.unexcused + ',' + date : date;
+                saveToLocal(); // Auto-save
+                showToast('تم تقييد حالة الغياب بالسجل');
+                closeModal('absenceModal');
+            }
+        }
+
+        // ================= PRINT DOCUMENTS & CERTIFICATES =================
+        function openDocModal(type) {
+            document.getElementById('docTypeInput').value = type;
+            document.getElementById('docModalTitle').innerText = type === 'certificate' ? 'إصدار شهادة مشاركة' : 'إصدار إخلاء طرف';
+            const select = document.getElementById('docMarkerSelect');
+            select.innerHTML = '<option value="all" class="font-bold text-blue-700 bg-blue-50">=> طباعة مجمعة (لجميع الأسماء في الجدول) <=</option>';
+            markers.forEach(m => { if(m.name) select.innerHTML += `<option value="${m.id}">${m.name} (${m.school})</option>`; });
+            openModal('docModal');
+        }
+
+        function setPrintView(htmlContent, layoutClass) {
+            const ps = document.getElementById('printSection');
+            ps.innerHTML = htmlContent;
+            ps.className = `bg-white min-h-screen w-full z-[500] absolute top-0 left-0 p-8 ${layoutClass}`;
+            document.getElementById('printActions').classList.remove('hidden');
+        }
+
+        function closePrintView() {
+            document.getElementById('printSection').classList.add('hidden');
+            document.getElementById('printActions').classList.add('hidden');
+        }
+
+        function printDocument() {
+            const type = document.getElementById('docTypeInput').value;
+            const id = document.getElementById('docMarkerSelect').value;
+            closeModal('docModal');
+
+            let targetMarkers = (id === 'all') ? markers.filter(m => m.name.trim() !== '') : markers.filter(x => x.id === id);
+            if(targetMarkers.length === 0) return showToast('لا توجد بيانات', true);
+
+            let html = '';
+            
+            targetMarkers.forEach((m, index) => {
+                let pageBreak = (index < targetMarkers.length - 1) ? 'page-break' : '';
+                
+                if (type === 'certificate') {
+                    html += `
+                    <div class="border-[12px] border-double border-blue-900/20 p-16 text-center h-[90vh] flex flex-col justify-center print-landscape max-w-5xl mx-auto mt-8 relative ${pageBreak}">
+                        <div class="absolute inset-0 flex justify-center items-center opacity-5 pointer-events-none">
+                            <svg class="w-96 h-96" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <h1 class="text-5xl font-black text-blue-900 mb-12 tracking-wide">شهـادة مشـاركـة</h1>
+                        <p class="text-2xl mb-8 leading-[3] font-medium text-slate-800">
+                            تشهد المديرية العامة للتقويم التربوي - مركز تصحيح نزوى بأن الفاضل/ة:
+                            <br><span class="text-5xl text-blue-700 my-6 block font-black">${m.name}</span>
+                            من مدرسة <span class="font-bold border-b border-dashed border-slate-400 pb-1">${m.school || '....................'}</span> قد شارك في أعمال التصحيح 
+                            بمهمة (<span class="font-bold border-b border-dashed border-slate-400 pb-1">${m.task}</span>) لمادة الدراسات الاجتماعية للعام الدراسي الحالي.
+                        </p>
+                        <p class="text-2xl mt-8 text-slate-600">مع خالص الأمنيات بدوام التوفيق والنجاح،،</p>
+                        <div class="mt-24 flex justify-between px-32">
+                            <div class="text-2xl font-bold border-t-2 border-slate-800 pt-4 w-48">رئيس المركز</div>
+                            <div class="text-2xl font-bold border-t-2 border-slate-800 pt-4 w-48 text-slate-400">الختم الرسمي</div>
+                        </div>
+                    </div>`;
+                } else {
+                    html += `
+                    <div class="border border-slate-300 p-12 text-right print-portrait max-w-3xl mx-auto mt-12 bg-white shadow-sm rounded ${pageBreak}">
+                        <div class="text-center mb-12 pb-6 border-b-2 border-slate-800">
+                            <h2 class="text-2xl font-bold text-slate-800">سلطنة عمان - وزارة التربية والتعليم</h2>
+                            <h1 class="text-4xl font-black mt-4 text-slate-900">إخلاء طرف مصحح</h1>
+                        </div>
+                        <div class="text-xl leading-[2.5] font-medium text-slate-800 space-y-6">
+                            <div class="flex items-end gap-2">
+                                <span class="w-32">الاسم الرباعي:</span> 
+                                <span class="border-b-2 border-slate-800 flex-grow text-center font-bold pb-1 text-2xl">${m.name}</span>
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <span class="w-32">جهة العمل:</span> 
+                                <span class="border-b-2 border-slate-800 flex-grow text-center font-bold pb-1 text-2xl">${m.school || '-'}</span>
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <span class="w-20">المهمة:</span> 
+                                <span class="border-b-2 border-slate-800 w-1/3 text-center font-bold pb-1 text-2xl">${m.task}</span>
+                                <span class="w-24 text-center">رقم القاعة:</span> 
+                                <span class="border-b-2 border-slate-800 flex-grow text-center font-bold pb-1 text-2xl">${m.hallNumber || '-'}</span>
+                            </div>
+                            <p class="mt-12 text-justify bg-slate-50 p-6 rounded border border-slate-200">
+                                يفيد إدارة مركز تصحيح نزوى بأن المذكور أعلاه قد أنهى كافة أعماله الموكلة إليه بمركز التصحيح، 
+                                وقام بتسليم كافة العهد والأوراق الخاصة بعملية التصحيح بشكل كامل ومطابق للتعليمات، وبناءً عليه تم إخلاء طرفه.
+                            </p>
+                            <div class="mt-20 flex justify-between px-10">
+                                <div class="text-center"><span class="block mb-6 text-slate-500">توقيع المشرف</span><span class="border-b-2 border-slate-800 w-48 inline-block"></span></div>
+                                <div class="text-center"><span class="block mb-6 text-slate-500">اعتماد رئيس المركز</span><span class="border-b-2 border-slate-800 w-48 inline-block"></span></div>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+            });
+
+            setPrintView(html, type === 'certificate' ? 'print-landscape' : 'print-portrait');
+        }
+
+        // ================= STATUS REPORTS (Exempt, Excused, Unexcused) =================
+        function generateStatusReport(type) {
+            let filtered = [];
+            let title = '';
+            
+            if(type === 'exempt') { 
+                filtered = markers.filter(m => m.exempt === 'نعم'); 
+                title = 'كشف بأسماء المعفيين من التصحيح'; 
+            } else if(type === 'excused') { 
+                filtered = markers.filter(m => m.excused && m.excused.length > 0); 
+                title = 'كشف تفصيلي بحالات الغياب (بعذر)'; 
+            } else if(type === 'unexcused') { 
+                filtered = markers.filter(m => m.unexcused && m.unexcused.length > 0); 
+                title = 'كشف تفصيلي بحالات الغياب (بدون عذر)'; 
+            }
+
+            if(filtered.length === 0) return showToast('لا توجد سجلات لهذه الفئة حالياً', true);
+
+            let html = `
+            <div class="print-portrait text-center mb-8">
+                <h1 class="text-2xl font-black mb-2 text-slate-800 border-b-2 border-slate-200 inline-block pb-2">${title}</h1>
+                <p class="text-slate-600 mt-2 font-medium">مركز تصحيح نزوى - مادة الدراسات الاجتماعية</p>
+            </div>
+            <table style="width:100%; border-collapse: collapse; text-align:center; font-size: 14px; border: 2px solid #0f172a;">
+                <thead>
+                    <tr style="background:#e2e8f0; color:#0f172a;">
+                        <th style="border: 1px solid #64748b; padding: 10px; width: 40px;">م</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">الاسم الرباعي</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">المدرسة</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">القاعة</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">المهمة</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">${type === 'exempt' ? 'سبب الإعفاء' : 'تواريخ الغياب'}</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
+            filtered.forEach((m, idx) => {
+                let detailText = type === 'exempt' ? (m.exemptionReason || 'غير محدد') : (type === 'excused' ? m.excused : m.unexcused);
+                html += `<tr>
+                    <td style="border: 1px solid #94a3b8; padding: 8px;">${idx + 1}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px; font-weight:bold; text-align:right;">${m.name}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px;">${m.school}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px;">${m.hallNumber}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px;">${m.task}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px;" dir="${type === 'exempt' ? 'rtl' : 'ltr'}">${detailText}</td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            setPrintView(html, 'print-portrait');
+        }
+
+        // ================= GENERAL REPORTS & ATTENDANCE =================
+        function openAttendanceSetup() { openModal('attendanceSetupModal'); }
+
+        function generateAttendanceSheet(e) {
+            e.preventDefault();
+            const startStr = document.getElementById('sheet_startDate').value;
+            const endStr = document.getElementById('sheet_endDate').value;
+            closeModal('attendanceSetupModal');
+
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            let datesArr = [];
+            let curr = new Date(start);
+            while(curr <= end) { datesArr.push(new Date(curr)); curr.setDate(curr.getDate() + 1); }
+
+            let html = `
+            <div class="print-landscape text-center mb-6">
+                <h1 class="text-2xl font-bold mb-2 uppercase tracking-wide">كشف الحضور والإنصراف اليومي</h1>
+                <p class="text-slate-600 font-medium">مركز تصحيح نزوى | الفترة من: ${startStr} إلى: ${endStr}</p>
+            </div>
+            <table style="width:100%; border-collapse: collapse; text-align:center; font-size: 13px; border: 1px solid #1e293b;">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="border: 1px solid #1e293b; padding: 6px; width: 40px; background:#f1f5f9;">م</th>
+                        <th rowspan="2" style="border: 1px solid #1e293b; padding: 6px; background:#f1f5f9;">اسم المصحح الرباعي</th>
+                        <th rowspan="2" style="border: 1px solid #1e293b; padding: 6px; width: 100px; background:#f1f5f9;">القاعة</th>`;
+            
+            datesArr.forEach(d => {
+                const dStr = d.toLocaleDateString('ar-OM', { day: '2-digit', month: '2-digit' });
+                html += `<th colspan="2" style="border: 1px solid #1e293b; padding: 4px; background:#e2e8f0; font-size:11px;">${dStr}</th>`;
+            });
+            html += `</tr><tr>`;
+            datesArr.forEach(() => {
+                html += `<th style="border: 1px solid #1e293b; font-size:10px; background:#f8fafc; padding:4px;">حضور</th><th style="border: 1px solid #1e293b; font-size:10px; background:#f8fafc; padding:4px;">انصراف</th>`;
+            });
+            html += `</tr></thead><tbody>`;
+
+            markers.forEach((m, idx) => {
+                html += `<tr>
+                    <td style="border: 1px solid #1e293b; padding: 6px; background:#f8fafc;">${idx + 1}</td>
+                    <td style="border: 1px solid #1e293b; text-align:right; padding:6px 12px; font-weight:bold;">${m.name}</td>
+                    <td style="border: 1px solid #1e293b; padding: 6px;">${m.hallNumber}</td>`;
+                datesArr.forEach(() => { html += `<td style="border: 1px solid #1e293b;"></td><td style="border: 1px solid #1e293b;"></td>`; });
+                html += `</tr>`;
+            });
+            html += `</tbody></table>`;
+            
+            setPrintView(html, 'print-landscape');
+        }
+
+        function generateRewardsSheet() {
+            if(markers.length === 0) return showToast('لا توجد بيانات للعرض', true);
+            let html = `
+            <div class="print-landscape text-center mb-8">
+                <h1 class="text-3xl font-black mb-2 text-slate-800 border-b-2 border-slate-200 inline-block pb-2">كشوف مستحقي المكافآت</h1>
+                <p class="text-slate-600 mt-2 font-medium">مركز تصحيح نزوى - مادة الدراسات الاجتماعية</p>
+            </div>
+            <table style="width:100%; border-collapse: collapse; text-align:center; font-size: 14px; border: 2px solid #0f172a;">
+                <thead>
+                    <tr style="background:#e2e8f0; color:#0f172a;">
+                        <th style="border: 1px solid #64748b; padding: 10px;">م</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">الاسم الرباعي</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">المدرسة</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">البنك</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">رقم الحساب</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">القاعة</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">المهمة</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            markers.forEach((m, idx) => {
+                html += `<tr>
+                    <td style="border: 1px solid #94a3b8; padding: 8px;">${idx + 1}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px; font-weight:bold; text-align:right;">${m.name}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px;">${m.school}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px;">${m.bankName}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px; font-family:monospace; font-size:15px; letter-spacing:1px;" dir="ltr">${m.accountNumber}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px;">${m.hallNumber}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 8px;">${m.task}</td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            setPrintView(html, 'print-landscape');
+        }
+
+        function generateHallsSheet() {
+            if(markers.length === 0) return showToast('لا توجد بيانات للعرض', true);
+            let html = `
+            <div class="print-portrait text-center mb-8">
+                <h1 class="text-3xl font-black mb-2 text-slate-800 border-b-2 border-slate-200 inline-block pb-2">كشوف توزيع القاعات</h1>
+                <p class="text-slate-600 mt-2 font-medium">مركز تصحيح نزوى - ترتيب حسب القاعات</p>
+            </div>
+            <table style="width:100%; border-collapse: collapse; text-align:center; font-size: 14px; border: 2px solid #0f172a;">
+                <thead>
+                    <tr style="background:#e2e8f0; color:#0f172a;">
+                        <th style="border: 1px solid #64748b; padding: 10px;">م</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">الاسم الرباعي</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">القاعة</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">المهمة</th>
+                        <th style="border: 1px solid #64748b; padding: 10px;">المجموعة</th>
+                        <th style="border: 1px solid #64748b; padding: 10px; width:120px;">التوقيع</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
+            let sortedMarkers = [...markers].sort((a, b) => (a.hallNumber || '').localeCompare(b.hallNumber || ''));
+            
+            sortedMarkers.forEach((m, idx) => {
+                html += `<tr>
+                    <td style="border: 1px solid #94a3b8; padding: 10px;">${idx + 1}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 10px; font-weight:bold; text-align:right;">${m.name}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 10px; font-weight:bold; background:#f8fafc;">${m.hallNumber}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 10px;">${m.task}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 10px;">${m.group}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 10px;"></td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            setPrintView(html, 'print-portrait');
+        }
+
+        function openReviewSheet() {
+            if(markers.length === 0) return showToast('لا توجد بيانات للعرض', true);
+            let html = `
+            <div class="print-landscape text-center mb-6">
+                <h1 class="text-2xl font-bold mb-2">سجل المراجعة الشامل للبيانات</h1>
+            </div>
+            <table style="width:100%; border-collapse: collapse; text-align:center; font-size: 11px; border: 1px solid #1e293b;">
+                <thead>
+                    <tr style="background:#f1f5f9; color:#0f172a;">
+                        <th style="border: 1px solid #cbd5e1; padding: 4px;">م</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 4px;">الاسم</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 4px;">الملف</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 4px;">المدرسة</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 4px;">البنك</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 4px;">الحساب</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 4px;">القاعة</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 4px;">المهمة</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 4px;">إعفاء</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 4px;">السبب</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            markers.forEach((m, idx) => {
+                html += `<tr>
+                    <td style="border: 1px solid #e2e8f0; padding: 4px;">${idx + 1}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 4px; font-weight:bold; text-align:right;">${m.name}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 4px;">${m.fileNumber}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 4px;">${m.school}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 4px;">${m.bankName}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 4px;" dir="ltr">${m.accountNumber}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 4px;">${m.hallNumber}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 4px;">${m.task}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 4px;">${m.exempt}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 4px;">${m.exemptionReason || '-'}</td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            setPrintView(html, 'print-landscape');
+        }
+
+    </script>
+</body>
+</html>
